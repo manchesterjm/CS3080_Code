@@ -30,52 +30,57 @@ except Exception as e:
 '''takes in the word and the input letter
    returns a 0 for no match, and the indices for the letter if the letter is correct'''
 def chk_word(letter, test_word) :
-    
     # split the test_word into a list of chars
     word = list(test_word)
-    
     # get the index the letters are in and return
-    return [ind for ind, letters in enumerate(word) if letters == letter] if letter in word else 0
+    return [indx for indx, letters in enumerate(word) if letters == letter] if letter in word else 0
 
 def rand_cell(lst) :
     return 'A' + str(randint(1, len(lst)))
-    
-''' MAIN '''
 
 '''read the data from the html file and then
    the <div, class=content> tag has the words in the second <p> tag under it so [1]
-   there are 3 <p> tags under the <div> but we only want the the second'''
-
-word_list_data = bs4.BeautifulSoup(WEB_PAGE.text, 'html.parser').find('div', class_='content').find_all('p')[1]
-
-'''get a cleaned up list by turning the data into a list and then removing the \n\t (new line and tab)
+   there are 3 <p> tags under the <div> but we only want the the second
+   get a cleaned up list by turning the data into a list and then removing the \n\t (new line and tab)
    along with only selecting data that is a string so the tag <br/> will not be included'''
-cleaned_list = [elem.replace('\n\t', '').replace('\'', '').lower() for elem in list(word_list_data) if isinstance(elem, str)]
+def get_clean_list(webPage) :
+    word_list_data = bs4.BeautifulSoup(webPage.text, 'html.parser').find('div', class_='content').find_all('p')[1]
+    return [elem.replace('\n\t', '').replace('\'', '').lower() for elem in list(word_list_data) if isinstance(elem, str)]
+
+def new_wb(lst) :
+    # create a new workbook
+    wb = openpyxl.Workbook()
+    sheet = wb.active # go to active sheet, should only be one
+    sheet.title = SHEET_NAME # name the sheet just because I can
+    '''fill the XL sheet with the 1000 words from the webpage that we cleaned up and stored in the list
+       and make the cell number so we can fill it '''
+    for i in range(1, len(lst)) : sheet['A' + str(i)] = lst[i]
+    wb.save(FILE_NAME) # save workbook
+    return sheet
+
+''' get a random word from the workbook sheet that is at least 6 letters long '''
+def get_wrd(lst, sht) :
+    guessWord = []
+    while len(guessWord) < 6 : guessWord = sht[rand_cell(lst)].value
+    return guessWord
+
+def prnt_lst(lst) :
+    print(f"{''.join(lst)}\n")
+
+''' MAIN '''
 
 # if an XL spreadsheet is already existing in the folder, delete to avoid problems
 if os.path.exists(FILE_NAME) : os.remove(FILE_NAME)
-
-# create a new workbook
-wb = openpyxl.Workbook()
-sheet = wb.active # go to active sheet, should only be one
-sheet.title = SHEET_NAME # name the sheet just because I can
-
-'''fill the XL sheet with the 1000 words from the webpage that we cleaned up and stored in the list
-   and make the cell number so we can fill it '''
-for i in range(1, len(cleaned_list)) : sheet['A' + str(i)] = cleaned_list[i]
-
-wb.save(FILE_NAME) # save workbook
-
-''' get a random word from the workbook sheet that is at least 6 letters long '''
-guess_word = []
-while len(guess_word) < 6 : guess_word = sheet[rand_cell(cleaned_list)].value
+cleaned_list = get_clean_list(WEB_PAGE)
+sheet = new_wb(cleaned_list)
+guess_word = get_wrd(cleaned_list, sheet)
 
 print(f"\nLet the game begin\n")
 print(f"Your word has {len(guess_word)} letters in it\n")
 
 ''' fill a temp list with underscores to denote the number and positions of the letters in the word '''
 temp_list = ["_ " for _ in range(len(guess_word))]
-print(f"{''.join(temp_list)}\n")
+prnt_lst(temp_list)
 
 count = 5 # give the user 5 misses and then terminate
 input_list = [] # save the users inputs so we do not penalize them for duplicates
@@ -97,7 +102,7 @@ while count > 0 :
         print("you guessed a letter")
         
         '''if there were one or more of the same letter in the word
-           add the letter in the correct index to the temp list for display'''
+           add the letter in the correct index in the temp list for display'''
         for elem in check: temp_list[elem] = str(user_input) + " " # preserve the space
         
     else :
@@ -111,7 +116,7 @@ while count > 0 :
             break # terminate while loop
     
     '''print out the current list of unkown and known letters'''        
-    print(f"{''.join(temp_list)}\n")
+    prnt_lst(temp_list)
     
     '''check if the list has any underscores left.  If none, then we guessed all the letters and we win'''
     if '_ ' not in temp_list :
