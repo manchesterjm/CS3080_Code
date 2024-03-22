@@ -3,7 +3,6 @@ from random import randint
 
 ''' CONSTANTS '''
 
-RND_WORD = 'A' + str(randint(1, 1001)) # generate a random int from 1 to 1000
 FILE_NAME = '1000_words.xlsx'
 SHEET_NAME = '1000_words'
 
@@ -37,6 +36,9 @@ def chk_word(letter, test_word) :
     
     # get the index the letters are in and return
     return [ind for ind, letters in enumerate(word) if letters == letter] if letter in word else 0
+
+def rand_cell(lst) :
+    return 'A' + str(randint(1, len(lst)))
     
 ''' MAIN '''
 
@@ -64,8 +66,9 @@ for i in range(1, len(cleaned_list)) : sheet['A' + str(i)] = cleaned_list[i]
 
 wb.save(FILE_NAME) # save workbook
 
-''' get a random word from the workbook sheet '''
-guess_word = sheet[RND_WORD].value
+''' get a random word from the workbook sheet that is at least 6 letters long '''
+guess_word = []
+while len(guess_word) < 6 : guess_word = sheet[rand_cell(cleaned_list)].value
 
 print(f"\nLet the game begin\n")
 print(f"Your word has {len(guess_word)} letters in it\n")
