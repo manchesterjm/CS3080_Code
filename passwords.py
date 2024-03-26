@@ -7,7 +7,7 @@ from tkinter import simpledialog
 numbers = [str(num) for num in range(0, 10)]
 lower = [chr(i) for i in range(ord('a'), ord('z')+1)]
 upper = [chr(i) for i in range(ord('A'), ord('Z')+1)]
-puncts = ['@', '#', '$', '%', '&']
+puncts = ['@', '#', '$', '%', '&', '?', '*']
 
 # Function to generate a list of passwords
 def generate_passwords(num_passwords, length):
@@ -16,8 +16,11 @@ def generate_passwords(num_passwords, length):
 
     passwords = []
     for _ in range(num_passwords):
+        # use sample(list, 2) where 2 will give 2 unique elements from each list
         password_chars = sample(numbers, 2) + sample(lower, 2) + sample(upper, 2) + sample(punct, 2)
+        # use set() to make sure that the list only has unique elements in them
         all_chars = list(set(numbers + lower + upper + punct) - set(password_chars))
+        # use shuffle() to randomize the element in the list
         shuffle(all_chars)
         password_chars += all_chars[:length - 8]
         shuffle(password_chars)
@@ -31,9 +34,13 @@ root.withdraw()  # Hide the main window as we only need the dialog
 # Ask user for input
 length = simpledialog.askinteger("Input", "Enter the password length:", parent=root, minvalue=8, maxvalue=60)
 num_passwords = simpledialog.askinteger("Input", "Enter the number of passwords to generate:", parent=root, minvalue=1, maxvalue=100)
-spec_chars = simpledialog.askstring("Input", "Enter special characters: ", parent=root)
-if spec_chars != '' :
-    punct = [val for val in spec_chars if val != ' ']
+user_input_spec_chars = simpledialog.askstring("Input", "Enter special characters: ", parent=root)
+
+# if using a list of special chars from a website that specifies you can only use certain chars
+# this will check if you have entered any, and if you copied and pasted the list, it will remove
+# and spaces or whitespce that may be included
+if user_input_spec_chars != '' :
+    punct = [val for val in user_input_spec_chars if val != ' ']
 else :
     punct = puncts
 
