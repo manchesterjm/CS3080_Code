@@ -34,7 +34,8 @@ num_passwords = simpledialog.askinteger("Input", "Enter the number of passwords 
 spec_chars = simpledialog.askstring("Input", "Enter special characters: ", parent=root)
 if spec_chars != '' :
     punct = [val for val in spec_chars if val != ' ']
-if punct == [] : punct = puncts
+else :
+    punct = puncts
 
 if length and num_passwords:  # Check if user provided both inputs
     root.deiconify()  # Show the main window again to display the passwords
