@@ -52,7 +52,7 @@ if length and num_passwords:  # Check if user provided both inputs
     passwords = generate_passwords(num_passwords, length)
 
     customFont = tkfont.Font(family="Courier new", size=20)  # Adjust font size here
-    text_widget = tk.Text(root, height=15, width=50, font=customFont)
+    text_widget = tk.Text(root, height=num_passwords+2, width=length+4, font=customFont)
     text_widget.pack()
     text_widget.insert(tk.END, passwords)
 
