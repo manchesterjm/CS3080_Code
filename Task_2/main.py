@@ -6,6 +6,7 @@ FILE_NAME = 'authors.xlsx'
 SHEET_NAME = 'authors'
 
 # source URL for the 1000 words we will use
+
 WEB_PAGE_1 = requests.get('https://openaccess.thecvf.com/CVPR2021?day=all')
 WEB_PAGE_2 = requests.get('https://openaccess.thecvf.com/CVPR2022?day=all')
 WEB_PAGE_3 = requests.get('https://openaccess.thecvf.com/CVPR2023?day=all')
@@ -31,62 +32,82 @@ for page in web_list :
 
 ''' FUNCTIONS '''
 
+# returns the number of publications for the given year list for the list of supplied authors
+def get_auth_pubs(auths, lst) :
+    dict = {}
+    for auth in auths : # get author name from list
+        counter = 0
+        for name in lst : # iterate through the list of names in the current year list
+            if name == auth : # tally the amount of times the name appears in the list
+                counter += 1
+        dict[auth] = counter # saves the author name and the number of times the anme appears in the list to a dictionary
+    return(dict) # returns the dictionary
+        
+# returns a cleamup list of names from the website data provided
 def get_clean_list(webPage) :
-    word_list_data = bs4.BeautifulSoup(webPage.text, 'html.parser')
-    elems = word_list_data.select('input', name_='query_author')
-    lst = [elem.get('value') for elem in elems]
+    text_data = bs4.BeautifulSoup(webPage.text, 'html.parser') # get the text of the webpage
+    tags_lst = text_data.select('input', name_='query_author') # get tags labeled as imput with name queary_author
+    lst = [tag.get('value') for tag in tags_lst] # grabs the value from the input tag where the value = the author name
     return lst
 
-def new_wb(lst) :
+# grabs the top three authors in all years, returns the top three authors
+def get_top_auths(lst) :
+    dict = {}
+    for auth in lst :
+        if auth in dict :
+            dict[auth] += 1
+        else :
+            dict[auth] = 1
+    ''' used a lambda function here because we went over it in class and I thought it would knock down on typing
+        out some code.  Used reverse sort and then grabed the last three entries in the dictionary since those would have
+        the highest total publication count'''
+    return sorted(dict.items(), key=lambda item: item[1], reverse=True)[:3]
+
+def new_wb(dict) :
     # create a new workbook
     wb = openpyxl.Workbook()
     sheet = wb.active # go to active sheet, should only be one
     sheet.title = SHEET_NAME # name the sheet just because I can
-    '''fill the XL sheet with the 1000 words from the webpage that we cleaned up and stored in the list
-       and make the cell number so we can fill it '''
-    for i in range(1, len(str(lst))) :
-        print(str(lst))
-        sheet['A' + str(i)] = str(lst)
+    years = list(dict.keys()) # get list of years from the supplied dictionary
+    authors = list(set(auth for year in dict for auth in dict[year])) # get a list of the authors from the dict
+    ''' note, I used set() to get a unique list of authors so the above line of code can be generic'''
+
+    sheet.append([''] + authors) # create the top row in the spreadsheet
+    
+    ''' this makes three rows, one for each year, and in each row it gets the number of papers per
+        author for each year .get(author, 0) using list comprehension, then we append that to the sheet'''
+    for year in years :
+        sheet.append([year] + [dict[year].get(author, 0) for author in authors])
+
+    ''' this makes the last row for the totals.  for each author, we find the amount of publications per year
+        and then add them up all sum().  We then append it to the totals row and then append the totals row to the worksheet'''
+    totals_row = ['Totals'] # start the totals row
+    for author in authors :
+        totals_row.append(sum(dict[year].get(author, 0) for year in years))
+    sheet.append(totals_row)
+    
     wb.save(FILE_NAME) # save workbook
-    return sheet
+    return 0
 
 ''' MAIN '''
 
 # if an XL spreadsheet is already existing in the folder, delete to avoid problems
 if os.path.exists(FILE_NAME) : os.remove(FILE_NAME)
 
-cleaned_list_1 = get_clean_list(WEB_PAGE_1)
-cleaned_list_2 = get_clean_list(WEB_PAGE_2)
-cleaned_list_3 = get_clean_list(WEB_PAGE_3)
+yr_2021 = get_clean_list(WEB_PAGE_1)
+yr_2022 = get_clean_list(WEB_PAGE_2)
+yr_2023 = get_clean_list(WEB_PAGE_3)
 
-clean_lists = [cleaned_list_1, cleaned_list_2, cleaned_list_3]
-cleaned_all = cleaned_list_1 + cleaned_list_2 + cleaned_list_3
+clean_lists = [yr_2021, yr_2022, yr_2023]
+cleaned_all = yr_2021 + yr_2022 + yr_2023
 
-dict_2021 = {}
-dict_2022 = {}
-dict_2023 = {}
-dict_lst = [dict_2021, dict_2022, dict_2023]
+top_auths = get_top_auths(cleaned_all)
 
-for lst in range(0, len(clean_lists)) :
-    for auth in clean_lists[lst] :
-        if auth in dict_lst[lst] :
-            dict_lst[lst][auth] += 1
-        else :
-            dict_lst[lst][auth] = 1
-    top_three_auths = sorted(dict_lst[lst].items(), key=lambda item: item[1], reverse=True)[:3]
-    for key, value in top_three_auths :
-        print(f'{key}: {value}')
-    print(f'\n')
-#sheet = new_wb(cleaned_list)
+auth_names = [key for key, _ in top_auths]
 
-dict = {}
-for auth in cleaned_all :
-    if auth in dict :
-        dict[auth] += 1
-    else :
-        dict[auth] = 1
-top_auths = sorted(dict.items(), key=lambda item: item[1], reverse=True)[:3]
-for key, value in top_auths :
-    print(f'{key}: {value}')
-    
-new_wb(top_auths)
+dict_all = {}
+years = ['2021', '2022', '2023']
+for lst, year in zip(clean_lists, years) :
+    dict_all[year] = get_auth_pubs(auth_names, lst)
+
+new_wb(dict_all)
