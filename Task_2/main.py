@@ -110,7 +110,7 @@ def new_wb(dict) :
 # if an XL spreadsheet is already existing in the folder, delete to avoid problems
 if os.path.exists(FILE_NAME) : os.remove(FILE_NAME)
 
-#query webpages and get cleanup up lists of authors
+# query webpages and get cleanup up lists of authors
 clean_lists = [get_clean_list(check_webpage(url)) for url in webpage_urls]
 
 cleaned_all = sum(clean_lists, [])
@@ -120,6 +120,10 @@ top_auths = get_top_auths(cleaned_all) # get a list of top authors for all years
 # get the top authers number of publications for each year
 dict_all = {}
 years = [url.split('CVPR')[1].split('?')[0] for url in webpage_urls] # get a list of years from the URLs
+''' this splits the url at CVPR, creating a list with two elements with the Year in the second element
+    then we split again at the ? which leaves the Year in the first element.  That's how we grab the Year '''
+
+
 for lst, year in zip(clean_lists, years) :
     dict_all[year] = get_auth_pubs(top_auths, lst)
 '''NOTE this makes a nested dictionary'''
