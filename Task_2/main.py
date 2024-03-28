@@ -1,3 +1,15 @@
+''' HEADER INFO
+
+    Josh Manchester
+    CS3080
+    Task 2
+
+    Write a python program that gets the top three authors from the input URLs
+    and then gathers the author names and the amount of publications they had during each
+    respective year, and then sums the publications for each author for all years.  This
+    information is then stored in an Excel workbook in a format specified by the asignment
+'''
+
 import bs4, requests, openpyxl, os
 
 ''' CONSTANTS '''
@@ -5,7 +17,7 @@ import bs4, requests, openpyxl, os
 FILE_NAME = 'authors.xlsx'
 SHEET_NAME = 'authors'
 
-# source URL for the 1000 words we will use
+# source URLs, can add more or remove urls to this list and the program should work just fine as long as the urls are from this website
 
 webpage_urls = ['https://openaccess.thecvf.com/CVPR2021?day=all', 
                 'https://openaccess.thecvf.com/CVPR2022?day=all', 
@@ -24,17 +36,17 @@ if openpyxl.__version__ != '3.1.2' :
 
 ''' Test that the webpage is there.  If it is offline or has been deleted or just has a problem
     we display an error and terminate program '''
-def check_webpate(page) :
+def check_webpage(page) :
     try:
         check = requests.get(page)
         check.raise_for_status()
         return check
     except requests.exceptions.HTTPError as http_err:
         print(f"There was an HTTP error for {page}: {http_err}")
-        exit(1)  # Exiting the script due to HTTP error
+        exit(1)  # terminate because HTTP error
     except Exception as err:
-        print(f"THere was an error accessing {page}: {err}")
-        exit(1)  # Exiting the script due to a general error
+        print(f"There was an error accessing {page}: {err}")
+        exit(1)  # terminate becuase general error
 
 ''' Returns the number of publications for the given year list for the list of supplied authors '''
 def get_auth_pubs(auths, lst) :
@@ -47,12 +59,11 @@ def get_auth_pubs(auths, lst) :
         dict[auth] = counter # saves the author name and the number of times the anme appears in the list to a dictionary
     return(dict) # returns the dictionary
         
-''' Returns a cleamup list of names from the website data provided '''
+''' Returns a cleaned list of names from the website data provided '''
 def get_clean_list(webPage) :
     text_data = bs4.BeautifulSoup(webPage.text, 'html.parser') # get the text of the webpage
     tags_lst = text_data.select('input', name_='query_author') # get tags labeled as imput with name queary_author
-    lst = [tag.get('value') for tag in tags_lst] # grabs the value from the input tag where the value = the author name
-    return lst
+    return [tag.get('value') for tag in tags_lst] # grabs the value from the input tag where the value = the author name
 
 ''' Grabs the top three authors in all years, returns the top three authors '''
 def get_top_auths(lst) :
@@ -62,11 +73,11 @@ def get_top_auths(lst) :
             dict[auth] += 1
         else :
             dict[auth] = 1
-    ''' used a lambda function here because we went over it in class and I thought it would knock down on typing
+    ''' Used a lambda function here because we went over it in class and I thought it would knock down on typing
         out some code.  Used reverse sort and then grabed the last three entries in the dictionary since those would have
         the highest total publication count. NOTE that sorted() turns the dictionary into a list automatically '''
     top_auths = sorted(dict.items(), key=lambda item: item[1], reverse=True)[:3]
-    return [key for key, _ in top_auths]
+    return [name for name, _ in top_auths]
 
 ''' Creates a new workbook and fills it with the data required '''
 def new_wb(dict) :
@@ -100,20 +111,18 @@ def new_wb(dict) :
 if os.path.exists(FILE_NAME) : os.remove(FILE_NAME)
 
 #query webpages and get cleanup up lists of authors
-yr_2021 = get_clean_list(check_webpate(webpage_urls[0]))
-yr_2022 = get_clean_list(check_webpate(webpage_urls[1]))
-yr_2023 = get_clean_list(check_webpate(webpage_urls[2]))
+clean_lists = [get_clean_list(check_webpage(url)) for url in webpage_urls]
 
-clean_lists = [yr_2021, yr_2022, yr_2023]
-cleaned_all = yr_2021 + yr_2022 + yr_2023
+cleaned_all = sum(clean_lists, [])
 
 top_auths = get_top_auths(cleaned_all) # get a list of top authors for all years
 
 # get the top authers number of publications for each year
 dict_all = {}
-years = ['2021', '2022', '2023']
+years = [url.split('CVPR')[1].split('?')[0] for url in webpage_urls] # get a list of years from the URLs
 for lst, year in zip(clean_lists, years) :
     dict_all[year] = get_auth_pubs(top_auths, lst)
+'''NOTE this makes a nested dictionary'''
 
 # make a workbook with the top authors and the number of publications per year
 new_wb(dict_all)
