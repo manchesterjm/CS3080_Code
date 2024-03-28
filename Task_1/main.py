@@ -7,7 +7,7 @@ FILE_NAME = '1000_words.xlsx'
 SHEET_NAME = '1000_words'
 
 # source URL for the 1000 words we will use
-WEB_PAGE = requests.get('https://www.ef.edu/english-resources/english-vocabulary/top-1000-words/')
+url = 'https://www.ef.edu/english-resources/english-vocabulary/top-1000-words/'
 
 ''' PERFORM SOME CHECKS '''
 
@@ -18,50 +18,56 @@ if openpyxl.__version__ != '3.1.2' :
     print(f"This script was made using openpyxl 3.1.2")
     print(f"You may expirence unwanted behavior")
 
-# test that the webpage is there.  If it is offline or has been deleted, we display an error and terminate program
-try:
-    WEB_PAGE.raise_for_status()
-except Exception as e:
-    print(f"\nSomething is wrong with the webpage : {e}\n")
-    exit()
-
 ''' FUNCTIONS '''
 
-'''takes in the word and the input letter
-   returns a 0 for no match, and the indices for the letter if the letter is correct'''
+def check_webpage(page) :
+    try:
+        check = requests.get(page)
+        check.raise_for_status()
+        return check
+    except requests.exceptions.HTTPError as http_err:
+        print(f"There was an HTTP error for {page}: {http_err}")
+        exit(1)  # terminate because HTTP error
+    except Exception as err:
+        print(f"There was an error accessing {page}: {err}")
+        exit(1)  # terminate becuase general error
+
+''' takes in the word and the input letter
+    returns a 0 for no match, and the indices for the letter if the letter is correct'''
 def chk_word(letter, test_word) :
     # split the test_word into a list of chars
     word = list(test_word)
     # get the index the letters are in and return
     return [indx for indx, letters in enumerate(word) if letters == letter] if letter in word else 0
 
-def rand_cell(lst) :
-    return 'A' + str(randint(1, len(lst)))
+def rand_cell(rows) :
+    return 'A' + str(randint(1, rows))
 
-'''read the data from the html file and then
-   the <div, class=content> tag has the words in the second <p> tag under it so [1]
-   there are 3 <p> tags under the <div> but we only want the the second
-   get a cleaned up list by turning the data into a list and then removing the \n\t (new line and tab)
-   along with only selecting data that is a string so the tag <br/> will not be included'''
+''' Read the data from the html file '''
 def get_clean_list(webPage) :
-    word_list_data = bs4.BeautifulSoup(webPage.text, 'html.parser').find('div', class_='content').find_all('p')[1]
-    return [elem.replace('\n\t', '').replace('\'', '').lower() for elem in list(word_list_data) if isinstance(elem, str)]
+    text_data = bs4.BeautifulSoup(webPage.text, 'html.parser')
+    p_tags = text_data.select('div.field-item.even > p') # gets the 3 p tags from inside this specific div tag
+    word_list = p_tags[1] # we only want the second p tag as it contains the words
+    ''' NOTE The word list has a bunch of extra crap in it that needs to be removed or not read at all
+        like "<br>" break tags and "\n" new lines and "\t" tabs and "\'" single quotes
+        also if something in this p tag is not a string we don't want to include it '''
+    return [elem.replace('\n\t', '').replace('\'', '').lower() for elem in list(word_list) if isinstance(elem, str)]
 
 def new_wb(lst) :
     # create a new workbook
     wb = openpyxl.Workbook()
     sheet = wb.active # go to active sheet, should only be one
     sheet.title = SHEET_NAME # name the sheet just because I can
-    '''fill the XL sheet with the 1000 words from the webpage that we cleaned up and stored in the list
+    ''' fill the XL sheet with the 1000 words from the webpage that we cleaned up and stored in the list
        and make the cell number so we can fill it '''
     for i in range(1, len(lst)) : sheet['A' + str(i)] = lst[i]
     wb.save(FILE_NAME) # save workbook
     return sheet
 
 ''' get a random word from the workbook sheet that is at least 6 letters long '''
-def get_wrd(lst, sht) :
+def get_wrd(sht) :
     guessWord = []
-    while len(guessWord) < 6 : guessWord = sht[rand_cell(lst)].value
+    while len(guessWord) < 6 : guessWord = sht[rand_cell(sht.max_row)].value
     return guessWord
 
 def prnt_lst(lst) :
@@ -71,9 +77,15 @@ def prnt_lst(lst) :
 
 # if an XL spreadsheet is already existing in the folder, delete to avoid problems
 if os.path.exists(FILE_NAME) : os.remove(FILE_NAME)
-cleaned_list = get_clean_list(WEB_PAGE)
+
+# query webpages and get cleanup up lists of words
+cleaned_list = get_clean_list(check_webpage(url))
+
+# write list to workbook
 sheet = new_wb(cleaned_list)
-guess_word = get_wrd(cleaned_list, sheet)
+
+# get a randome word to guess
+guess_word = get_wrd(sheet)
 
 print(f"\nLet the game begin\n")
 print(f"Your word has {len(guess_word)} letters in it\n")
@@ -85,7 +97,7 @@ prnt_lst(temp_list)
 count = 5 # give the user 5 misses and then terminate
 input_list = [] # save the users inputs so we do not penalize them for duplicates
 
-'''use a while loop counting down to 0'''
+''' use a while loop counting down to 0 '''
 
 while count > 0 :
     user_input = input(f"Please enter a letter : ") # get user input
@@ -101,8 +113,8 @@ while count > 0 :
     if check :
         print("you guessed a letter")
         
-        '''if there were one or more of the same letter in the word
-           add the letter in the correct index in the temp list for display'''
+        ''' if there were one or more of the same letter in the word
+            add the letter in the correct index in the temp list for display '''
         for elem in check: temp_list[elem] = str(user_input) + " " # preserve the space
         
     else :
@@ -115,10 +127,10 @@ while count > 0 :
             print(f"\nYou Lost!\n")
             break # terminate while loop
     
-    '''print out the current list of unkown and known letters'''        
+    ''' print out the current list of unkown and known letters '''        
     prnt_lst(temp_list)
     
-    '''check if the list has any underscores left.  If none, then we guessed all the letters and we win'''
+    ''' check if the list has any underscores left.  If none, then we guessed all the letters and we win '''
     if '_ ' not in temp_list :
         print(f"\nYou won!\n")
         break # terminate while loop
