@@ -20,6 +20,8 @@ if openpyxl.__version__ != '3.1.2' :
 
 ''' FUNCTIONS '''
 
+''' takes the webpage URL and gets the text of the webpage, terminates programs and displays an 
+    error if the page does not exist or there was a problem loading the page '''
 def check_webpage(page) :
     try:
         check = requests.get(page)
@@ -40,6 +42,7 @@ def chk_word(letter, test_word) :
     # get the index the letters are in and return
     return [indx for indx, letters in enumerate(word) if letters == letter] if letter in word else 0
 
+''' gets a random cell from the workbook active sheet '''
 def rand_cell(rows) :
     return 'A' + str(randint(1, rows))
 
@@ -53,6 +56,7 @@ def get_clean_list(webPage) :
         also if something in this p tag is not a string we don't want to include it '''
     return [elem.replace('\n\t', '').replace('\'', '').lower() for elem in list(word_list) if isinstance(elem, str)]
 
+''' creates a new Excell workbook and saves the list of 1000 words to the active sheet '''
 def new_wb(lst) :
     # create a new workbook
     wb = openpyxl.Workbook()
@@ -70,6 +74,7 @@ def get_wrd(sht) :
     while len(guessWord) < 6 : guessWord = sht[rand_cell(sht.max_row)].value
     return guessWord
 
+''' prints the list that is sent to it '''
 def prnt_lst(lst) :
     print(f"{''.join(lst)}\n")
 
