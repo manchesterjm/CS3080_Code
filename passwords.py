@@ -4,9 +4,9 @@ from tkinter import font as tkfont
 from tkinter import simpledialog
 
 # Define the character sets
-numbers = [str(num) for num in range(0, 10)]
-lower = [chr(i) for i in range(ord('a'), ord('z')+1)]
-upper = [chr(i) for i in range(ord('A'), ord('Z')+1)]
+numbers = [str(num) for num in range(2, 10)]
+lower = [chr(i) for i in range(ord('a'), ord('z') + 1) if (chr(i) != 'l' and chr(i) != 'i')]
+upper = [chr(i) for i in range(ord('A'), ord('Z') + 1) if (chr(i) != 'O' and chr(i) != 'I')]
 puncts = ['@', '#', '$', '%', '&', '?', '*']
 
 # Function to generate a list of passwords
@@ -19,11 +19,21 @@ def generate_passwords(num_passwords, length):
         # use sample(list, 2) where 2 will give 2 unique elements from each list
         password_chars = sample(numbers, 2) + sample(lower, 2) + sample(upper, 2) + sample(punct, 2)
         # use set() to make sure that the list only has unique elements in them
+        # subtract the unique chars that we sampled from a set of all possible chars
         all_chars = list(set(numbers + lower + upper + punct) - set(password_chars))
+
         # use shuffle() to randomize the element in the list
         shuffle(all_chars)
+        
+        # length = number of chars the user wants in the password
+        # - 8 because the minimum length of a password has to be 8 because we want two unique chars from each list
+        # Get length - 8 chars from the end of the modified all_chars list and add that list to the original unique 8
         password_chars += all_chars[:length - 8]
+        
+        # shffle the list so it looks random
         shuffle(password_chars)
+        
+        # take the list of chars and make a string
         passwords.append(''.join(password_chars))
     return '\n'.join(passwords)
 
