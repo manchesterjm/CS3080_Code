@@ -15,9 +15,12 @@ def get_screen_aspect_ratio():
     # Calculate GCD of the screen dimensions
     ratio_gcd = gcd(width, height)
 
-    # Return the aspect ratio as a tuple
-    return (width // ratio_gcd, height // ratio_gcd)
+    # Normalize the width with respect to the height
+    normalized_width = width / height  # Use floating-point division
+
+    # Format the result to 2 decimal places
+    return f"{normalized_width:.2f}:1"
 
 # Get and print the aspect ratio
 aspect_ratio = get_screen_aspect_ratio()
-print(f"Aspect Ratio: {aspect_ratio[0]}:{aspect_ratio[1]}")
+print(f"Aspect Ratio: {aspect_ratio}")
