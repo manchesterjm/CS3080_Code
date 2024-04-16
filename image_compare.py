@@ -1,5 +1,5 @@
 import os
-import shutil
+#import shutil
 import tkinter as tk
 from tkinter import Toplevel, Label, Button, messagebox
 from PIL import Image, ImageTk
