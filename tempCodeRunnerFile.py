@@ -1,0 +1,1 @@
+usb_drive_path = r'G:\'

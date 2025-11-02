@@ -1,6 +1,6 @@
 import math, openpyxl, numpy, pandas
 
-qprint(openpyxl.__version__)
+print(openpyxl.__version__)
 
 def is_prime(num) :
     if num < 2 :

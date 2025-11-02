@@ -3,7 +3,7 @@ from datetime import datetime
 import re
 
 # Specify the directory containing the files
-directory = r'D:\Pictures\Scans\New folder'
+directory = r'D:\Pictures\Wallpapers'
 
 # Define a regular expression pattern that matches the datetime format in the filenames
 pattern = re.compile(r'^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}')
