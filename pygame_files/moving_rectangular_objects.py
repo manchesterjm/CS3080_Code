@@ -1,38 +1,60 @@
+"""
+Pygame rectangular object movement demonstration.
+
+This module demonstrates moving a blue rectangle using arrow keys while
+keeping a reference red rectangle stationary.
+"""
+# pylint: disable=no-member,no-name-in-module,consider-using-sys-exit
+
 import pygame
-from pygame.locals import *
-from sys import exit
+from pygame.locals import K_DOWN, K_LEFT, K_RIGHT, K_UP, KEYDOWN, QUIT, Rect
 
-pygame.init()
-screen = pygame.display.set_mode((400,300))
-rect1 = Rect(50, 60, 200, 80)
-rect2 = rect1.copy()
 
-white = (255, 255, 255)
-x_offset, y_offset = 0, 0
+# Color constants
+WHITE = (255, 255, 255)
 
-while True:
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            exit()
 
-        rect2.move_ip(x_offset, y_offset)
-        screen.fill(white)
-        pygame.draw.rect(screen, (255,0,0), rect1, 1)
-        pygame.draw.rect(screen, (0,0,255), rect2, 5)
-        pygame.display.update()
-        x_offset, y_offset = 0, 0    
+def main() -> None:
+    """
+    Display and move rectangular objects with arrow keys.
 
-        if event.type == KEYDOWN:
-            if event.key == K_LEFT:
-                x_offset = -5
-                y_offset = 0
-            if event.key == K_RIGHT:
-                x_offset = 5
-                y_offset = 0
-            if event.key == K_UP:
-                x_offset = 0
-                y_offset = -5
-            if event.key == K_DOWN:
-                x_offset = 0
-                y_offset = 5
+    Returns:
+        None
+    """
+    pygame.init()
+    screen = pygame.display.set_mode((400, 300))
+    rect1 = Rect(50, 60, 200, 80)
+    rect2 = rect1.copy()
+
+    x_offset, y_offset = 0, 0
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                exit()
+
+            rect2.move_ip(x_offset, y_offset)
+            screen.fill(WHITE)
+            pygame.draw.rect(screen, (255, 0, 0), rect1, 1)
+            pygame.draw.rect(screen, (0, 0, 255), rect2, 5)
+            pygame.display.update()
+            x_offset, y_offset = 0, 0
+
+            if event.type == KEYDOWN:
+                if event.key == K_LEFT:
+                    x_offset = -5
+                    y_offset = 0
+                if event.key == K_RIGHT:
+                    x_offset = 5
+                    y_offset = 0
+                if event.key == K_UP:
+                    x_offset = 0
+                    y_offset = -5
+                if event.key == K_DOWN:
+                    x_offset = 0
+                    y_offset = 5
+
+
+if __name__ == '__main__':
+    main()

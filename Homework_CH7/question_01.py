@@ -1,22 +1,49 @@
-'''
-Write program that matches a string that contains sequences of lowercase
-letters joined by an underscore
-'''
+"""
+Lowercase underscore string validator.
 
-# Need to look for _
-# Need to look for Upper Case
-# if no _ or there are Upper Case, then fail
+This module validates strings that contain only lowercase letters
+and underscores using regular expressions.
+"""
 
 import re
 
-def str_chkr(a) :
-    return bool(re.search("^[a-z_]*$", a)) # need the whole string to match this pattern
-                                           # from start "^" only _ and only lower case "*" repeating to end "$"
-        
-input_1 = 'aab_cbbbc'
-input_2 = 'aab_Abbbc'
-input_3 = 'Aaab_abbbc'
 
-print(str_chkr(input_1))
-print(str_chkr(input_2))
-print(str_chkr(input_3))
+def str_chkr(a: str) -> bool:
+    """
+    Check if string contains only lowercase letters and underscores.
+
+    Args:
+        a: String to validate
+
+    Returns:
+        bool: True if string matches pattern, False otherwise
+
+    Example:
+        >>> str_chkr("hello_world")
+        True
+        >>> str_chkr("Hello_World")
+        False
+    """
+    # Need the whole string to match this pattern
+    # From start "^" only _ and only lower case "*" repeating to end "$"
+    return bool(re.search("^[a-z_]*$", a))
+
+
+def main() -> None:
+    """
+    Test string validator with example inputs.
+
+    Returns:
+        None
+    """
+    input_1 = 'aab_cbbbc'
+    input_2 = 'aab_Abbbc'
+    input_3 = 'Aaab_abbbc'
+
+    print(str_chkr(input_1))
+    print(str_chkr(input_2))
+    print(str_chkr(input_3))
+
+
+if __name__ == '__main__':
+    main()
